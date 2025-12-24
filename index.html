@@ -1,1 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>GameBoy Cloud</title>
+<link rel="stylesheet" href="style.css">
+<script src="emulator/loader.js"></script>
+</head>
 
+<body>
+<div class="console">
+    <img src="assets/logo.png" class="logo">
+
+    <div id="emulator"></div>
+
+    <div class="controls">
+        <button>A</button>
+        <button>B</button>
+        <button>START</button>
+        <button>SELECT</button>
+    </div>
+</div>
+
+<script>
+EJS_player = "#emulator";
+EJS_core = "gb";
+EJS_gameUrl = "roms/pokemon.gb";
+EJS_pathtodata = "emulator/";
+</script>
+</body>
+</html>
