@@ -1,130 +1,122 @@
 // =============================
-// EMULATOR LOADER (Game Boy)
+// EMULATOR LOADER (Game Boy / GBA)
 // =============================
 
-// Config padrão (pode ser sobrescrita no index.html)
+// Config padrão (sobrescrita pelo index.html)
 window.EJS_player = window.EJS_player || "#emulator";
-window.EJS_core = window.EJS_core || "gb";
+window.EJS_core = window.EJS_core || "gba";
 window.EJS_gameUrl = window.EJS_gameUrl || "";
 window.EJS_pathtodata = window.EJS_pathtodata || "emulator/";
 window.EJS_startOnLoaded = true;
+
+// Remove botões nativos (usaremos os nossos)
 window.EJS_Buttons = {
     playPause: false,
     restart: false,
     mute: true,
-    settings: true,
+    settings: false,
     fullscreen: true,
     saveState: false,
     loadState: false
 };
 
-// Mobile otimização
+// Mobile
 window.EJS_defaultControls = true;
 window.EJS_touchControls = true;
 window.EJS_screenRecording = false;
 window.EJS_disableDatabases = false;
 
 // =============================
-// LOAD EMULATORJS SCRIPT
+// LOAD EMULATORJS
 // =============================
 (function () {
     const script = document.createElement("script");
     script.src = EJS_pathtodata + "emulator.min.js";
-    script.async = true;
+    script.defer = true;
     document.head.appendChild(script);
 })();
 
 // =============================
-// READY CHECK
+// EVENTO CORRETO DE READY
 // =============================
-let waitEmulator = setInterval(() => {
-    if (window.EJS_emulator) {
-        clearInterval(waitEmulator);
-        onEmulatorReady();
-    }
-}, 100);
+window.EJS_onGameStart = function () {
+    console.log("EmulatorJS iniciado");
 
-// =============================
-// EMULATOR READY
-// =============================
-function onEmulatorReady() {
-    console.log("EmulatorJS pronto");
-
-    // Força foco (mobile)
     const player = document.querySelector(EJS_player);
-    player.tabIndex = 1;
-    player.focus();
+    if (player) {
+        player.tabIndex = 1;
+        player.focus();
+    }
 
-    // Ajuste tela
     resizeScreen();
     window.addEventListener("resize", resizeScreen);
 
-    // FPS mais estável em celular fraco
-    try {
-        EJS_emulator.setSpeed(1);
-    } catch (e) {}
-
-    // Auto-load save se existir
     autoLoad();
-}
+};
 
 // =============================
-// AUTO LOAD
+// AUTO LOAD SAVE
 // =============================
 function autoLoad() {
-    if (!window.indexedDB) return;
+    if (!window.indexedDB || !window.EJS_emulator) return;
 
     const request = indexedDB.open("GameBoyMemoryCard", 1);
+
     request.onsuccess = e => {
         const db = e.target.result;
+
+        if (!db.objectStoreNames.contains("saves")) return;
+
         const tx = db.transaction("saves", "readonly");
         const store = tx.objectStore("saves");
         const req = store.get(getGameId());
 
         req.onsuccess = () => {
-            if (req.result) {
+            if (req.result && req.result.state) {
                 try {
-                    EJS_emulator.loadState(req.result.state);
-                    console.log("Save carregado automaticamente");
-                } catch (e) {}
+                    window.EJS_emulator.loadState(req.result.state);
+                    console.log("Save carregado");
+                } catch (err) {
+                    console.warn("Erro ao carregar save");
+                }
             }
         };
     };
 }
 
 // =============================
-// SCREEN RESIZE
+// AJUSTE DE TELA
 // =============================
 function resizeScreen() {
     const el = document.querySelector(EJS_player);
     if (!el) return;
 
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-
-    el.style.maxWidth = w + "px";
-    el.style.maxHeight = h * 0.55 + "px";
+    el.style.width = "100%";
+    el.style.maxHeight = "60vh";
 }
 
 // =============================
-// GAME ID (por ROM)
+// GAME ID (GB / GBC / GBA)
 // =============================
 function getGameId() {
     if (!EJS_gameUrl) return "default";
+
     return EJS_gameUrl
         .split("/")
         .pop()
+        .replace(".gba", "")
+        .replace(".gbc", "")
         .replace(".gb", "")
-        .replace(".gbc", "");
+        .replace(/\s+/g, "");
 }
 
 // =============================
-// API GLOBAL (USO NO script.js)
+// API GLOBAL
 // =============================
 window.GameBoyAPI = {
     save() {
         try {
-            return EJS_emulator.saveState();
+            return window.EJS_emulator.saveState();
         } catch {
             return null;
         }
@@ -132,13 +124,13 @@ window.GameBoyAPI = {
 
     load(state) {
         try {
-            EJS_emulator.loadState(state);
+            window.EJS_emulator.loadState(state);
         } catch {}
     },
 
     screenshot() {
         try {
-            return EJS_emulator.getScreenshot();
+            return window.EJS_emulator.getScreenshot();
         } catch {
             return null;
         }
@@ -146,6 +138,6 @@ window.GameBoyAPI = {
 
     fullscreen() {
         const el = document.querySelector(EJS_player);
-        if (el.requestFullscreen) el.requestFullscreen();
+        if (el?.requestFullscreen) el.requestFullscreen();
     }
 };
