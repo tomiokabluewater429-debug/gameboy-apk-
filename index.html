@@ -2,23 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>GameBoy Cloud</title>
+<title>GameBoy APK</title>
+
 <link rel="stylesheet" href="style.css">
-<script src="emulator/loader.js"></script>
 </head>
 
 <body>
-<div class="console">
-    <img src="assets/logo.png" class="logo">
 
-    <div id="emulator"></div>
+<img src="assets/logo.png" width="200">
 
-    <div class="controls">
-        <button>A</button>
-        <button>B</button>
-        <button>START</button>
-        <button>SELECT</button>
-    </div>
+<div id="emulator"></div>
+
+<div class="controls">
+  <button>A</button>
+  <button>B</button>
+  <button>START</button>
+  <button>SELECT</button>
 </div>
 
 <script>
@@ -27,5 +26,9 @@ EJS_core = "gba";
 EJS_gameUrl = "roms/Pokemon Leaf Green.gba";
 EJS_pathtodata = "emulator/";
 </script>
+
+<script src="emulator/loader.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html>
